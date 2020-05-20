@@ -75,7 +75,7 @@ else()
     option(SW_BUILD "Build with sw" OFF)
 endif()
 option(OPENMP_BUILD "Build with openmp support" OFF)  # see issue #1662
-option(AUTO_OPTIMIZE "Usage of cmake auto optimize macros (not suitable for portable build)" ON)
+option(AUTO_OPTIMIZE "Usage of cmake auto optimize macros (not suitable for portable build)" OFF)
 option(GRAPHICS_DISABLED "Disable disable graphics (ScrollView)" OFF)
 option(DISABLED_LEGACY_ENGINE "Disable the legacy OCR engine" OFF)
 option(BUILD_TRAINING_TOOLS "Build training tools" OFF)
