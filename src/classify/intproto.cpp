@@ -165,8 +165,6 @@ void RenderIntProto(ScrollView *window,
                     ScrollView::Color color);
 #endif  // GRAPHICS_DISABLED
 
-int TruncateParam(float Param, int Min, int Max, char *Id);
-
 /*-----------------------------------------------------------------------------
         Global Data Definitions and Declarations
 -----------------------------------------------------------------------------*/
@@ -197,6 +195,27 @@ static double_VAR(classify_cp_side_pad_tight, 0.6, "Class Pruner Side Pad Tight"
 static double_VAR(classify_pp_angle_pad, 45.0, "Proto Pruner Angle Pad");
 static double_VAR(classify_pp_end_pad, 0.5, "Proto Prune End Pad");
 static double_VAR(classify_pp_side_pad, 2.5, "Proto Pruner Side Pad");
+
+/**
+ * This routine truncates Param to lie within the range
+ * of Min-Max inclusive.
+ *
+ * @param Param   parameter value to be truncated
+ * @param Min, Max  parameter limits (inclusive)
+ *
+ * @return Truncated parameter.
+ */
+static int TruncateParam(float Param, int Min, int Max) {
+  int result;
+  if (Param < Min) {
+    result = Min;
+  } else if (Param > Max) {
+    result = Max;
+  } else {
+    result = static_cast<int>(std::floor(Param));
+  }
+  return result;
+}
 
 /*-----------------------------------------------------------------------------
               Public Code
@@ -486,21 +505,18 @@ namespace tesseract {
  * @param Class integer class to add converted proto to
  */
 void Classify::ConvertProto(PROTO Proto, int ProtoId, INT_CLASS Class) {
-  INT_PROTO P;
-  float Param;
-
   assert(ProtoId < Class->NumProtos);
 
-  P = ProtoForProtoId(Class, ProtoId);
+  INT_PROTO P = ProtoForProtoId(Class, ProtoId);
 
-  Param = Proto->A * 128;
-  P->A = TruncateParam(Param, -128, 127, nullptr);
+  float Param = Proto->A * 128;
+  P->A = TruncateParam(Param, -128, 127);
 
   Param = -Proto->B * 256;
-  P->B = TruncateParam(Param, 0, 255, nullptr);
+  P->B = TruncateParam(Param, 0, 255);
 
   Param = Proto->C * 128;
-  P->C = TruncateParam(Param, -128, 127, nullptr);
+  P->C = TruncateParam(Param, -128, 127);
 
   Param = Proto->Angle * 256;
   if (Param < 0 || Param >= 256)
@@ -510,7 +526,7 @@ void Classify::ConvertProto(PROTO Proto, int ProtoId, INT_CLASS Class) {
 
   /* round proto length to nearest integer number of pico-features */
   Param = (Proto->Length / GetPicoFeatureLength()) + 0.5;
-  Class->ProtoLengths[ProtoId] = TruncateParam(Param, 1, 255, nullptr);
+  Class->ProtoLengths[ProtoId] = TruncateParam(Param, 1, 255);
   if (classify_learning_debug_level >= 2)
     cprintf("Converted ffeat to (A=%d,B=%d,C=%d,L=%d)",
             P->A, P->B, P->C, Class->ProtoLengths[ProtoId]);
@@ -1686,35 +1702,6 @@ void RenderIntProto(ScrollView *window,
   window->DrawTo(X + Dx, Y + Dy);
 }                                /* RenderIntProto */
 #endif
-
-/**
- * This routine truncates Param to lie within the range
- * of Min-Max inclusive.  If a truncation is performed, and
- * Id is not null, an warning message is printed.
- *
- * @param Param   parameter value to be truncated
- * @param Min, Max  parameter limits (inclusive)
- * @param Id    string id of parameter for error messages
- *
- * Globals: none
- *
- * @return Truncated parameter.
- */
-int TruncateParam(float Param, int Min, int Max, char *Id) {
-  if (Param < Min) {
-    if (Id)
-      cprintf("Warning: Param %s truncated from %f to %d!\n",
-              Id, Param, Min);
-    Param = Min;
-  } else if (Param > Max) {
-    if (Id)
-      cprintf("Warning: Param %s truncated from %f to %d!\n",
-              Id, Param, Max);
-    Param = Max;
-  }
-  return static_cast<int>(std::floor(Param));
-}                                /* TruncateParam */
-
 
 #ifndef GRAPHICS_DISABLED
 /**
